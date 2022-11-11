@@ -138,7 +138,10 @@ class EditorState {
     if (contentState.getBlockMap().count() === 0) {
       return EditorState.createEmpty(decorator);
     }
-    const firstKey = contentState.getBlockMap().first().getKey();
+    const firstKey = contentState
+      .getBlockMap()
+      .first()
+      .getKey();
     return EditorState.create({
       currentContent: contentState,
       undoStack: Stack(),
@@ -343,7 +346,10 @@ class EditorState {
   }
 
   isSelectionAtStartOfContent(): boolean {
-    const firstKey = this.getCurrentContent().getBlockMap().first().getKey();
+    const firstKey = this.getCurrentContent()
+      .getBlockMap()
+      .first()
+      .getKey();
     return this.getSelection().hasEdgeWithin(firstKey, 0, 0);
   }
 
@@ -440,6 +446,7 @@ class EditorState {
     contentState: ContentState,
     changeType: EditorChangeType,
     forceSelection: boolean = true,
+    boundaryState: ?boolean = undefined,
   ): EditorState {
     if (editorState.getCurrentContent() === contentState) {
       return editorState;
@@ -466,17 +473,16 @@ class EditorState {
     let undoStack = editorState.getUndoStack();
     let newContent = contentState;
 
-    if (
-      selection !== currentContent.getSelectionAfter() ||
-      mustBecomeBoundary(editorState, changeType)
-    ) {
+    if (boundaryState === undefined) {
+      boundaryState =
+        selection !== currentContent.getSelectionAfter() ||
+        mustBecomeBoundary(editorState, changeType);
+    }
+
+    if (boundaryState) {
       undoStack = undoStack.push(currentContent);
       newContent = newContent.setSelectionBefore(selection);
-    } else if (
-      changeType === 'insert-characters' ||
-      changeType === 'backspace-character' ||
-      changeType === 'delete-character'
-    ) {
+    } else {
       // Preserve the previous selection.
       newContent = newContent.setSelectionBefore(
         currentContent.getSelectionBefore(),
